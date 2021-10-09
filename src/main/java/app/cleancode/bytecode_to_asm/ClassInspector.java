@@ -25,7 +25,7 @@ public class ClassInspector extends ClassVisitor {
         System.out.printf("\nAccess %d\nName %s\nDescriptor %s\nSignature %s\nExceptions %s\n",
                 access, name, descriptor, signature,
                 exceptions == null ? "<None>" : String.join(", ", exceptions));
-        return super.visitMethod(access, name, descriptor, signature, exceptions);
+        return new MethodInspector(name, descriptor, this);
     }
 
 }
