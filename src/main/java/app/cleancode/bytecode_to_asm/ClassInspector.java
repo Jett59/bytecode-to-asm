@@ -1,6 +1,7 @@
 package app.cleancode.bytecode_to_asm;
 
 import org.objectweb.asm.ClassVisitor;
+import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 
 public class ClassInspector extends ClassVisitor {
@@ -16,6 +17,15 @@ public class ClassInspector extends ClassVisitor {
         System.out.printf("Version %d\nAccess %d\nName %s\nSignature %s\nSuper %s\nInterfaces %s\n",
                 version, access, name, signature, superName, String.join(", ", interfaces));
         super.visit(version, access, name, signature, superName, interfaces);
+    }
+
+    @Override
+    public MethodVisitor visitMethod(int access, String name, String descriptor, String signature,
+            String[] exceptions) {
+        System.out.printf("\nAccess %d\nName %s\nDescriptor %s\nSignature %s\nExceptions %s\n",
+                access, name, descriptor, signature,
+                exceptions == null ? "<None>" : String.join(", ", exceptions));
+        return super.visitMethod(access, name, descriptor, signature, exceptions);
     }
 
 }
