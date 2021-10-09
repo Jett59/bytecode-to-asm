@@ -4,11 +4,9 @@ import org.objectweb.asm.ClassReader;
 
 public class App {
     public static void main(String[] args) {
-        Test.class.getClassLoader()
-                .getResourceAsStream(Test.class.getName().replace('.', '/').concat(".class"));
         try {
             ClassReader reader = new ClassReader(Test.class.getName());
-            System.out.println(reader.getClassName());
+            reader.accept(new ClassInspector(), 0);
         } catch (Exception e) {
             e.printStackTrace();
         }
