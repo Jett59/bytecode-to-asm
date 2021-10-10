@@ -1,20 +1,30 @@
 package app.cleancode.bytecode_to_asm;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import org.objectweb.asm.Label;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
+import app.cleancode.bytecode_to_asm.instructions.Instruction;
 
 public class MethodInspector extends MethodVisitor {
 
+    private final int access;
     private final String name, descriptor;
     private final ClassInspector classInspector;
+    private final List<Instruction> instructions;
+    private final List<VariableInfo> variables;
 
-    public MethodInspector(String name, String descriptor, ClassInspector classInspector) {
+    public MethodInspector(int access, String name, String descriptor,
+            ClassInspector classInspector) {
         super(Opcodes.ASM9);
+        this.access = access;
         this.name = name;
         this.descriptor = descriptor;
         this.classInspector = classInspector;
+        this.instructions = new ArrayList<>();
+        this.variables = new ArrayList<>();
     }
 
     @Override
@@ -46,6 +56,7 @@ public class MethodInspector extends MethodVisitor {
         System.out.printf("\nLocal\nName %s\nDescriptor %s\nSignature %s\nIndex %d\n", name,
                 descriptor, signature, index);
         super.visitLocalVariable(name, descriptor, signature, start, end, index);
+        variables.add(new VariableInfo(name, descriptor));
     }
 
     @Override
@@ -84,4 +95,14 @@ public class MethodInspector extends MethodVisitor {
         System.out.printf("\nInsn\nOpcode %d\n", opcode);
         super.visitInsn(opcode);
     }
+
+    @Override
+    public void visitEnd() {
+        System.out.println("\nEnd");
+        super.visitEnd();
+        classInspector.methods
+                .add(new MethodInfo(name, descriptor, (access & Opcodes.ACC_PUBLIC) != 0,
+                        (access & Opcodes.ACC_STATIC) != 0, variables, instructions));
+    }
+
 }

@@ -1,14 +1,19 @@
 package app.cleancode.bytecode_to_asm;
 
+import java.util.ArrayList;
+import java.util.List;
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 
 public class ClassInspector extends ClassVisitor {
+    public final List<MethodInfo> methods;
+    public final List<FieldInfo> fields;
 
     public ClassInspector() {
         super(Opcodes.ASM9);
-        // TODO Auto-generated constructor stub
+        this.methods = new ArrayList<>();
+        this.fields = new ArrayList<>();
     }
 
     @Override
@@ -25,7 +30,7 @@ public class ClassInspector extends ClassVisitor {
         System.out.printf("\nAccess %d\nName %s\nDescriptor %s\nSignature %s\nExceptions %s\n",
                 access, name, descriptor, signature,
                 exceptions == null ? "<None>" : String.join(", ", exceptions));
-        return new MethodInspector(name, descriptor, this);
+        return new MethodInspector(access, name, descriptor, this);
     }
 
 }
