@@ -10,6 +10,11 @@ public class ClassInspector extends ClassVisitor {
     public final List<MethodInfo> methods;
     public final List<FieldInfo> fields;
 
+    public ClassInfo info = null;
+
+    private String name;
+    private int access;
+
     public ClassInspector() {
         super(Opcodes.ASM9);
         this.methods = new ArrayList<>();
@@ -22,6 +27,8 @@ public class ClassInspector extends ClassVisitor {
         System.out.printf("Version %d\nAccess %d\nName %s\nSignature %s\nSuper %s\nInterfaces %s\n",
                 version, access, name, signature, superName, String.join(", ", interfaces));
         super.visit(version, access, name, signature, superName, interfaces);
+        this.access = access;
+        this.name = name;
     }
 
     @Override
@@ -31,6 +38,15 @@ public class ClassInspector extends ClassVisitor {
                 access, name, descriptor, signature,
                 exceptions == null ? "<None>" : String.join(", ", exceptions));
         return new MethodInspector(access, name, descriptor, this);
+    }
+
+    @Override
+    public void visitEnd() {
+        System.out.println("\nEnd");
+        super.visitEnd();
+        System.out.println();
+        info = new ClassInfo(name, (access & Opcodes.ACC_PUBLIC) != 0, methods, fields);
+        System.out.println(info);
     }
 
 }
