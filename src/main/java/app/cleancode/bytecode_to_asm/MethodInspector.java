@@ -11,6 +11,7 @@ import app.cleancode.bytecode_to_asm.instructions.FieldInstruction;
 import app.cleancode.bytecode_to_asm.instructions.Instruction;
 import app.cleancode.bytecode_to_asm.instructions.IntInstruction;
 import app.cleancode.bytecode_to_asm.instructions.LdcInstruction;
+import app.cleancode.bytecode_to_asm.instructions.LineInstruction;
 import app.cleancode.bytecode_to_asm.instructions.MethodInstruction;
 import app.cleancode.bytecode_to_asm.instructions.VariableInstruction;
 
@@ -45,6 +46,7 @@ public class MethodInspector extends MethodVisitor {
     public void visitLineNumber(int line, Label start) {
         System.out.printf("\nLine %d\n", line);
         super.visitLineNumber(line, start);
+        instructions.add(new LineInstruction(line));
     }
 
     @Override

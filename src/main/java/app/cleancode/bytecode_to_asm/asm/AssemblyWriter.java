@@ -4,6 +4,8 @@ import java.io.BufferedWriter;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import app.cleancode.bytecode_to_asm.ClassInfo;
+import app.cleancode.bytecode_to_asm.MethodInfo;
+import app.cleancode.bytecode_to_asm.instructions.Instruction;
 
 public class AssemblyWriter {
     public void writeAssembly(ClassInfo classInfo, OutputStream output, String fileName) {
@@ -13,6 +15,27 @@ public class AssemblyWriter {
             writer.append(String.format(".file \"%s\"\n\n", fileName));
             writer.append(".code64\n\n");
             writer.append(".text\n\n");
+            for (MethodInfo method : classInfo.methods()) {
+                String methodName = NameUtils.buildName(classInfo.name(), method.name());
+                if (method.isPublic() && classInfo.isPublic()) {
+                    writer.append(String.format(".global %s\n", methodName));
+                }
+                writer.append(String.format("%s:\n", methodName));
+                for (Instruction instruction : method.instructions()) {
+                    switch (instruction.getType()) {
+                        case LINE: {
+                            writer.append(
+                                    String.format("// Source line: %d\n", instruction.opcode()));
+                            break;
+                        }
+                        default:
+                            writer.append("// Warning: unknown instruction type "
+                                    + instruction.getType().toString());
+                            writer.append('\n');
+                    }
+                }
+                writer.append('\n');
+            }
         } catch (Exception e) {
             e.printStackTrace();
         }
