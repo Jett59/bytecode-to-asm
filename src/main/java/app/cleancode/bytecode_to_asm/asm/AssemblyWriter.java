@@ -33,6 +33,7 @@ public class AssemblyWriter {
                 writer.append("movq %rsp, %rbp\n");
                 writer.append(
                         String.format("subq $%d, %%rsp\n", method.maxStackElements() * Long.BYTES));
+                storeArgs(method, registers, writer);
                 for (Instruction instruction : method.instructions()) {
                     switch (instruction.getType()) {
                         case LINE: {
@@ -69,6 +70,54 @@ public class AssemblyWriter {
             writer.append(rodata.toString());
         } catch (Exception e) {
             e.printStackTrace(System.out);
+        }
+    }
+
+    private void storeArgs(MethodInfo method, RegisterAllocator registers, Writer writer)
+            throws Exception {
+        String arglist = method.signature().substring(1, method.signature().length() - 2);
+        String[] args = arglist.split(",");
+        int firstArgRegister = 0;
+        writer.append(String.format("// Takes %d arguments\n", args.length));
+        Register[] argRegisters = new Register[] {Register.RDI, Register.RSI, Register.RDX,
+                Register.RCX, Register.R8, Register.R9};
+        if (!method.isStatic()) {
+            // Hidden 'this' argument
+            writer.append("// + 'this' pointer\n");
+            writer.append("mov %rdi, -8(%rbp)\n");
+            firstArgRegister = 1;
+        }
+        for (int i = 0; i < args.length; i++) {
+            String arg = args[i].trim();
+            int argSize = getSize(arg);
+            switch (argSize) {
+                case 64: {
+                    writer.append(String.format("mov %%%s, -%d(%%rbp)\n",
+                            argRegisters[i + firstArgRegister].displayName64(),
+                            i * 8 + 8 + firstArgRegister * 8));
+                    break;
+                }
+                case 32: {
+                    writer.append(String.format("mov %%%s, -%d(%%rbp)\n",
+                            argRegisters[i + firstArgRegister].displayName32(),
+                            i * 8 + 8 + 8 * firstArgRegister));
+                    break;
+                }
+                case 16: {
+                    writer.append(String.format("mov %%%s, -%d(%%rbp)\n",
+                            argRegisters[i + firstArgRegister].displayName16(),
+                            i * 8 + 8 + 8 * firstArgRegister));
+                    break;
+                }
+                case 8: {
+                    writer.append(String.format("mov %%%s, -%d(%%rbp)\n",
+                            argRegisters[i + firstArgRegister].displayName8(),
+                            i * 8 + 8 + 8 * firstArgRegister));
+                    break;
+                }
+                default:
+                    throw new IllegalArgumentException("Unknown operand size " + argSize);
+            }
         }
     }
 
