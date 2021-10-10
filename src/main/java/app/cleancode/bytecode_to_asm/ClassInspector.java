@@ -3,6 +3,7 @@ package app.cleancode.bytecode_to_asm;
 import java.util.ArrayList;
 import java.util.List;
 import org.objectweb.asm.ClassVisitor;
+import org.objectweb.asm.FieldVisitor;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 
@@ -34,10 +35,21 @@ public class ClassInspector extends ClassVisitor {
     @Override
     public MethodVisitor visitMethod(int access, String name, String descriptor, String signature,
             String[] exceptions) {
-        System.out.printf("\nAccess %d\nName %s\nDescriptor %s\nSignature %s\nExceptions %s\n",
+        System.out.printf(
+                "\nMethod\nAccess %d\nName %s\nDescriptor %s\nSignature %s\nExceptions %s\n",
                 access, name, descriptor, signature,
                 exceptions == null ? "<None>" : String.join(", ", exceptions));
         return new MethodInspector(access, name, descriptor, this);
+    }
+
+    @Override
+    public FieldVisitor visitField(int access, String name, String descriptor, String signature,
+            Object value) {
+        System.out.printf("\nField\nAccess %d\nName %s\nDescriptor %s\nSignature %s\nValue %s\n",
+                access, name, descriptor, signature, value);
+        fields.add(new FieldInfo(name, (access & Opcodes.ACC_PUBLIC) != 0,
+                (access & Opcodes.ACC_STATIC) != 0, descriptor, value));
+        return super.visitField(access, name, descriptor, signature, value);
     }
 
     @Override
