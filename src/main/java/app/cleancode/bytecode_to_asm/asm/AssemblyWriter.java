@@ -10,6 +10,7 @@ import app.cleancode.bytecode_to_asm.MethodInfo;
 import app.cleancode.bytecode_to_asm.instructions.FieldInstruction;
 import app.cleancode.bytecode_to_asm.instructions.Instruction;
 import app.cleancode.bytecode_to_asm.instructions.LdcInstruction;
+import app.cleancode.bytecode_to_asm.instructions.MethodInstruction;
 
 public class AssemblyWriter {
     private int operandStackOffset = 0;
@@ -49,6 +50,10 @@ public class AssemblyWriter {
                                     method);
                             break;
                         }
+                        case METHOD: {
+                            writeMethodInstruction((MethodInstruction) instruction, method, writer);
+                            break;
+                        }
                         default:
                             throw new IllegalArgumentException(
                                     "Unknown instruction type " + instruction.getType());
@@ -60,6 +65,18 @@ public class AssemblyWriter {
             writer.append(rodata.toString());
         } catch (Exception e) {
             e.printStackTrace(System.out);
+        }
+    }
+
+    private void spillOperandStack(Writer writer, MethodInfo method, Register... registers)
+            throws Exception {
+        if (operandStackOffset <= registers.length) {
+            for (int i = 0; i < operandStackOffset; i++) {
+                writer.append(String.format("mov -%d(%%rbp), %%%s\n", (i + method.locals() + 1) * 8,
+                        registers[i].displayName64()));
+            }
+        } else {
+            throw new IllegalArgumentException("Excess elements on operand stack");
         }
     }
 
@@ -151,5 +168,13 @@ public class AssemblyWriter {
         writer.append(String.format("mov $%s, -%d(%%rbp)\n", valueString,
                 (operandStackOffset + method.locals() + 1) * 8));
         operandStackOffset++;
+    }
+
+    private void writeMethodInstruction(MethodInstruction instruction, MethodInfo method,
+            Writer writer) throws Exception {
+        String methodName = NameUtils.buildName(instruction.owner(), instruction.method());
+        spillOperandStack(writer, method, Register.RDI, Register.RSI, Register.RDX, Register.RCX,
+                Register.R8, Register.R9);
+        writer.append(String.format("call %s\n", methodName));
     }
 }
