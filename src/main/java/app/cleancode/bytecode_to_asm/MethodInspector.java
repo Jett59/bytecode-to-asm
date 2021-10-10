@@ -32,6 +32,54 @@ public class MethodInspector extends MethodVisitor {
     }
 
     @Override
+    public void visitMethodInsn(int opcode, String owner, String name, String descriptor,
+            boolean isInterface) {
+        System.out.printf(
+                "\nMethod insn\nOpcode %d\nOwner %s\nName %s\nDescriptor %s\nInterface %s\n",
+                opcode, owner, name, descriptor, Boolean.toString(isInterface));
+        super.visitMethodInsn(opcode, owner, name, descriptor, isInterface);
+    }
+
+    @Override
+    public void visitLocalVariable(String name, String descriptor, String signature, Label start,
+            Label end, int index) {
+        System.out.printf("\nLocal\nName %s\nDescriptor %s\nSignature %s\nIndex %d\n", name,
+                descriptor, signature, index);
+        super.visitLocalVariable(name, descriptor, signature, start, end, index);
+    }
+
+    @Override
+    public void visitParameter(String name, int access) {
+        System.out.printf("\nParam\nName %s\nAccess %d\n", name, access);
+        super.visitParameter(name, access);
+    }
+
+    @Override
+    public void visitVarInsn(int opcode, int var) {
+        System.out.printf("\nVar insn\nOpcode %d\nVariable %d\n", opcode, var);
+        super.visitVarInsn(opcode, var);
+    }
+
+    @Override
+    public void visitLdcInsn(Object value) {
+        System.out.printf("\nLdc insn\nValue %s\n", value);
+        super.visitLdcInsn(value);
+    }
+
+    @Override
+    public void visitIntInsn(int opcode, int operand) {
+        System.out.printf("\nInt insn\nOpcode %d\nOparand %d\n", opcode, operand);
+        super.visitIntInsn(opcode, operand);
+    }
+
+    @Override
+    public void visitFieldInsn(int opcode, String owner, String field, String type) {
+        System.out.printf("\nField insn\nOpcode %d\nOwner %s\nName %s\nType %s\n", opcode, owner,
+                field, type);
+        super.visitFieldInsn(opcode, owner, field, type);
+    }
+
+    @Override
     public void visitInsn(int opcode) {
         System.out.printf("\nInsn\nOpcode %d\n", opcode);
         super.visitInsn(opcode);
