@@ -9,6 +9,7 @@ import app.cleancode.bytecode_to_asm.ClassInfo;
 import app.cleancode.bytecode_to_asm.MethodInfo;
 import app.cleancode.bytecode_to_asm.instructions.FieldInstruction;
 import app.cleancode.bytecode_to_asm.instructions.Instruction;
+import app.cleancode.bytecode_to_asm.instructions.LdcInstruction;
 
 public class AssemblyWriter {
     private int operandStackOffset = 0;
@@ -43,6 +44,11 @@ public class AssemblyWriter {
                                     method);
                             break;
                         }
+                        case LDC: {
+                            writeLdcInstruction((LdcInstruction) instruction, registers, writer,
+                                    method);
+                            break;
+                        }
                         default:
                             throw new IllegalArgumentException(
                                     "Unknown instruction type " + instruction.getType());
@@ -50,9 +56,23 @@ public class AssemblyWriter {
                 }
                 writer.append('\n');
             }
+            writer.append(".rodata\n\n");
+            writer.append(rodata.toString());
         } catch (Exception e) {
             e.printStackTrace(System.out);
         }
+    }
+
+    private final StringBuilder rodata = new StringBuilder();
+
+    private String createConstString(boolean isPublic, String name, String value) {
+        String id = name != null ? name : String.format("str_%s", rodata.length());
+        if (isPublic) {
+            rodata.append(String.format(".global %s\n", id));
+        }
+        rodata.append(String.format("%s:\n", id));
+        rodata.append(String.format(".asciz \"%s\"\n", value));
+        return id;
     }
 
     private int getSize(String type) {
@@ -109,11 +129,27 @@ public class AssemblyWriter {
                     }
                 }
                 registers.free(register);
-                operandStackOffset += 8;
+                operandStackOffset++;
                 break;
             }
             default:
                 throw new IllegalArgumentException("Unknown opcode " + instruction.opcode());
         }
+    }
+
+    private void writeLdcInstruction(LdcInstruction instruction, RegisterAllocator registers,
+            Writer writer, MethodInfo method) throws Exception {
+        final Object value = instruction.constant();
+        String valueString;
+        if (value instanceof Number) {
+            valueString = value.toString();
+        } else if (value instanceof String) {
+            valueString = createConstString(false, null, value.toString());
+        } else {
+            throw new IllegalArgumentException("Unknown constant type " + value.getClass());
+        }
+        writer.append(String.format("mov $%s, -%d(%%rbp)\n", valueString,
+                (operandStackOffset + method.locals() + 1) * 8));
+        operandStackOffset++;
     }
 }
