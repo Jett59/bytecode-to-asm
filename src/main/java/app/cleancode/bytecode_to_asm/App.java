@@ -10,7 +10,7 @@ public class App {
             ClassInspector inspector = new ClassInspector();
             reader.accept(inspector, 0);
             AssemblyWriter assemblyWriter = new AssemblyWriter();
-            assemblyWriter.writeAssembly(inspector.info, System.err, "Test.S");
+            assemblyWriter.writeAssembly(inspector.info, System.err, "Test.java");
         } catch (Exception e) {
             e.printStackTrace();
         }

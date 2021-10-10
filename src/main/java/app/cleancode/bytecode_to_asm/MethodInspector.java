@@ -22,7 +22,7 @@ public class MethodInspector extends MethodVisitor {
     private final ClassInspector classInspector;
     private final List<Instruction> instructions;
     private final List<VariableInfo> variables;
-    private int maxStackElements;
+    private int maxStackElements, locals;
 
     public MethodInspector(int access, String name, String descriptor,
             ClassInspector classInspector) {
@@ -108,6 +108,7 @@ public class MethodInspector extends MethodVisitor {
     public void visitMaxs(int maxStack, int maxLocals) {
         super.visitMaxs(maxStack, maxLocals);
         maxStackElements = maxLocals + maxStack;
+        locals = maxLocals;
     }
 
     @Override
@@ -123,7 +124,7 @@ public class MethodInspector extends MethodVisitor {
         super.visitEnd();
         classInspector.methods.add(new MethodInfo(name, descriptor,
                 (access & Opcodes.ACC_PUBLIC) != 0, (access & Opcodes.ACC_STATIC) != 0, variables,
-                instructions, maxStackElements));
+                instructions, maxStackElements, locals));
     }
 
 }
