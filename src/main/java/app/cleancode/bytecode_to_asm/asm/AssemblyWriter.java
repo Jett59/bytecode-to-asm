@@ -21,6 +21,10 @@ public class AssemblyWriter {
                     writer.append(String.format(".global %s\n", methodName));
                 }
                 writer.append(String.format("%s:\n", methodName));
+                writer.append("pushq %rbp\n");
+                writer.append("movq %rsp, %rbp\n");
+                writer.append(
+                        String.format("subq $%d, %%rsp\n", method.maxStackElements() * Long.BYTES));
                 for (Instruction instruction : method.instructions()) {
                     switch (instruction.getType()) {
                         case LINE: {
@@ -29,15 +33,14 @@ public class AssemblyWriter {
                             break;
                         }
                         default:
-                            writer.append("// Warning: unknown instruction type "
-                                    + instruction.getType().toString());
-                            writer.append('\n');
+                            throw new IllegalArgumentException(
+                                    "Unknown instruction type " + instruction.getType());
                     }
                 }
                 writer.append('\n');
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            e.printStackTrace(System.out);
         }
     }
 }
