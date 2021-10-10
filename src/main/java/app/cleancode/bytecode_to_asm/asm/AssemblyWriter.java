@@ -54,6 +54,10 @@ public class AssemblyWriter {
                             writeMethodInstruction((MethodInstruction) instruction, method, writer);
                             break;
                         }
+                        case ARGLESS: {
+                            writeArglessInstruction(instruction, method, registers, writer);
+                            break;
+                        }
                         default:
                             throw new IllegalArgumentException(
                                     "Unknown instruction type " + instruction.getType());
@@ -176,5 +180,19 @@ public class AssemblyWriter {
         spillOperandStack(writer, method, Register.RDI, Register.RSI, Register.RDX, Register.RCX,
                 Register.R8, Register.R9);
         writer.append(String.format("call %s\n", methodName));
+    }
+
+    private void writeArglessInstruction(Instruction instruction, MethodInfo method,
+            RegisterAllocator registers, Writer writer) throws Exception {
+        switch (instruction.opcode()) {
+            case Opcodes.RETURN: {
+                writer.append("mov %rbp, %rsp\n");
+                writer.append("pop %rbp\n");
+                writer.append("retq\n");
+                break;
+            }
+            default:
+                throw new IllegalArgumentException("Unknown opcode " + instruction.opcode());
+        }
     }
 }
