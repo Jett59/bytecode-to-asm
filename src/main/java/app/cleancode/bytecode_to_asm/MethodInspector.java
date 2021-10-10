@@ -6,7 +6,13 @@ import java.util.List;
 import org.objectweb.asm.Label;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
+import app.cleancode.bytecode_to_asm.instructions.ArglessInstruction;
+import app.cleancode.bytecode_to_asm.instructions.FieldInstruction;
 import app.cleancode.bytecode_to_asm.instructions.Instruction;
+import app.cleancode.bytecode_to_asm.instructions.IntInstruction;
+import app.cleancode.bytecode_to_asm.instructions.LdcInstruction;
+import app.cleancode.bytecode_to_asm.instructions.MethodInstruction;
+import app.cleancode.bytecode_to_asm.instructions.VariableInstruction;
 
 public class MethodInspector extends MethodVisitor {
 
@@ -48,6 +54,7 @@ public class MethodInspector extends MethodVisitor {
                 "\nMethod insn\nOpcode %d\nOwner %s\nName %s\nDescriptor %s\nInterface %s\n",
                 opcode, owner, name, descriptor, Boolean.toString(isInterface));
         super.visitMethodInsn(opcode, owner, name, descriptor, isInterface);
+        instructions.add(new MethodInstruction(opcode, owner, name));
     }
 
     @Override
@@ -69,18 +76,21 @@ public class MethodInspector extends MethodVisitor {
     public void visitVarInsn(int opcode, int var) {
         System.out.printf("\nVar insn\nOpcode %d\nVariable %d\n", opcode, var);
         super.visitVarInsn(opcode, var);
+        instructions.add(new VariableInstruction(opcode, var));
     }
 
     @Override
     public void visitLdcInsn(Object value) {
         System.out.printf("\nLdc insn\nValue %s\n", value);
         super.visitLdcInsn(value);
+        instructions.add(new LdcInstruction(Opcodes.LDC, value));
     }
 
     @Override
     public void visitIntInsn(int opcode, int operand) {
         System.out.printf("\nInt insn\nOpcode %d\nOparand %d\n", opcode, operand);
         super.visitIntInsn(opcode, operand);
+        instructions.add(new IntInstruction(opcode, operand));
     }
 
     @Override
@@ -88,12 +98,14 @@ public class MethodInspector extends MethodVisitor {
         System.out.printf("\nField insn\nOpcode %d\nOwner %s\nName %s\nType %s\n", opcode, owner,
                 field, type);
         super.visitFieldInsn(opcode, owner, field, type);
+        instructions.add(new FieldInstruction(opcode, owner, field, type));
     }
 
     @Override
     public void visitInsn(int opcode) {
         System.out.printf("\nInsn\nOpcode %d\n", opcode);
         super.visitInsn(opcode);
+        instructions.add(new ArglessInstruction(opcode));
     }
 
     @Override
