@@ -66,6 +66,7 @@
     </executions>
     <configuration>
     <mainClass>app.cleancode.bytecode_to_asm.App</mainClass>
+    <imageName>bytecode-to-asm</imageName>
     </configuration>
 </plugin>
   </plugins>
