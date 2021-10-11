@@ -1,6 +1,7 @@
 package app.cleancode.bytecode_to_asm.asm;
 
 import java.io.OutputStream;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Optional;
@@ -17,6 +18,8 @@ public class Assembler {
         assemblerStdin.close();
         int result = assemblerProcess.waitFor();
         if (result != 0) {
+            System.err.println(new String(assemblerProcess.getErrorStream().readAllBytes(),
+                    StandardCharsets.UTF_8));
             Files.write(Paths.get(outputFile + ".S"), assembly);
             throw new RuntimeException(
                     "Assembling failed! written assembly code to " + outputFile + ".S");
