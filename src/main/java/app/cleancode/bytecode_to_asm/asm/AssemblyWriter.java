@@ -25,7 +25,8 @@ public class AssemblyWriter {
             writer.append(".code64\n\n");
             writer.append(".text\n\n");
             for (MethodInfo method : classInfo.methods()) {
-                String methodName = NameUtils.buildName(classInfo.name(), method.name());
+                String methodName =
+                        NameUtils.buildName(classInfo.name(), method.name(), method.signature());
                 if (method.isPublic() && classInfo.isPublic()) {
                     writer.append(String.format(".global %s\n", methodName));
                 }
@@ -169,7 +170,8 @@ public class AssemblyWriter {
             RegisterAllocator registers, MethodInfo method) throws Exception {
         switch (instruction.opcode()) {
             case Opcodes.GETSTATIC: {
-                String fieldName = NameUtils.buildName(instruction.owner(), instruction.field());
+                String fieldName = NameUtils.buildName(instruction.owner(), instruction.field(),
+                        instruction.type());
                 int stackElement = operandStackOffset + method.locals();
                 int stackOffset = (stackElement + 1) * 8;
                 Register register = registers.allocate();
@@ -237,7 +239,8 @@ public class AssemblyWriter {
 
     private void writeMethodInstruction(MethodInstruction instruction, MethodInfo method,
             Writer writer) throws Exception {
-        String methodName = NameUtils.buildName(instruction.owner(), instruction.method());
+        String methodName = NameUtils.buildName(instruction.owner(), instruction.method(),
+                instruction.signature());
         spillOperandStack(writer, method, Register.RDI, Register.RSI, Register.RDX, Register.RCX,
                 Register.R8, Register.R9);
         writer.append(String.format("call %s\n", methodName));

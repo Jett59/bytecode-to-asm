@@ -2,16 +2,16 @@
 
 typedef FILE java_io_PrintStream;
 
-void java_io_PrintStream_println(java_io_PrintStream* this, const char* str) {
+void java_io_PrintStream_println__Ljava_lang_String_V(java_io_PrintStream* this, const char* str) {
   fprintf(this, "%s\n", str);
 }
-void java_lang_Object__init_(void* this) {}
+void java_lang_Object__init____V(void* this) {}
 
-java_io_PrintStream* java_lang_System_out;
+java_io_PrintStream* java_lang_System_out_Ljava_io_PrintStream;
 
-void app_cleancode_bytecode_to_asm_Test_main(const char** args);
+void app_cleancode_bytecode_to_asm_Test_main___arr_Ljava_lang_String_V(const char** args);
 
 int main(int argc, const char** argv) {
-  java_lang_System_out = stdout;
-  app_cleancode_bytecode_to_asm_Test_main(argv);
+  java_lang_System_out_Ljava_io_PrintStream = stdout;
+  app_cleancode_bytecode_to_asm_Test_main___arr_Ljava_lang_String_V(argv);
 }

@@ -57,7 +57,7 @@ public class MethodInspector extends MethodVisitor {
                 "\nMethod insn\nOpcode %d\nOwner %s\nName %s\nDescriptor %s\nInterface %s\n",
                 opcode, owner, name, descriptor, Boolean.toString(isInterface));
         super.visitMethodInsn(opcode, owner, name, descriptor, isInterface);
-        instructions.add(new MethodInstruction(opcode, owner, name));
+        instructions.add(new MethodInstruction(opcode, owner, name, descriptor));
     }
 
     @Override
