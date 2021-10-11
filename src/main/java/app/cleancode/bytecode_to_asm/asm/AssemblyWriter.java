@@ -72,7 +72,7 @@ public class AssemblyWriter {
                 }
                 writer.append('\n');
             }
-            writer.append(".rodata\n\n");
+            writer.append(".section .rodata\n\n");
             writer.append(rodata.toString());
         } catch (Exception e) {
             e.printStackTrace(System.out);
@@ -176,7 +176,7 @@ public class AssemblyWriter {
                 int size = getSize(instruction.type());
                 switch (size) {
                     case 64: {
-                        writer.append(String.format("mov %s, %%%s\n", fieldName,
+                        writer.append(String.format("mov %s(%%rip), %%%s\n", fieldName,
                                 register.displayName64()));
                         writer.append(String.format("mov %%%s, -%d(%%rbp)\n",
                                 register.displayName64(), stackOffset));
@@ -219,13 +219,19 @@ public class AssemblyWriter {
         String valueString;
         if (value instanceof Number) {
             valueString = value.toString();
+            writer.append(String.format("movq $%s, -%d(%%rbp)\n", valueString,
+                    (operandStackOffset + method.locals() + 1) * 8));
         } else if (value instanceof String) {
             valueString = createConstString(false, null, value.toString());
+            Register register = registers.allocate();
+            writer.append(
+                    String.format("lea %s(%%rip), %%%s\n", valueString, register.displayName64()));
+            writer.append(String.format("movq %%%s, -%d(%%rbp)\n", register.displayName64(),
+                    (operandStackOffset + method.locals() + 1) * 8));
+            registers.free(register);
         } else {
             throw new IllegalArgumentException("Unknown constant type " + value.getClass());
         }
-        writer.append(String.format("mov $%s, -%d(%%rbp)\n", valueString,
-                (operandStackOffset + method.locals() + 1) * 8));
         operandStackOffset++;
     }
 
