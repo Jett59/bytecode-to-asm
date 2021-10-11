@@ -11,6 +11,7 @@ import app.cleancode.bytecode_to_asm.instructions.FieldInstruction;
 import app.cleancode.bytecode_to_asm.instructions.Instruction;
 import app.cleancode.bytecode_to_asm.instructions.LdcInstruction;
 import app.cleancode.bytecode_to_asm.instructions.MethodInstruction;
+import app.cleancode.bytecode_to_asm.instructions.VariableInstruction;
 
 public class AssemblyWriter {
     private int operandStackOffset = 0;
@@ -57,6 +58,11 @@ public class AssemblyWriter {
                         }
                         case ARGLESS: {
                             writeArglessInstruction(instruction, method, registers, writer);
+                            break;
+                        }
+                        case VARIABLE: {
+                            writeVariableInstruction((VariableInstruction) instruction, method,
+                                    registers, writer);
                             break;
                         }
                         default:
@@ -229,6 +235,7 @@ public class AssemblyWriter {
         spillOperandStack(writer, method, Register.RDI, Register.RSI, Register.RDX, Register.RCX,
                 Register.R8, Register.R9);
         writer.append(String.format("call %s\n", methodName));
+        operandStackOffset = 0;
     }
 
     private void writeArglessInstruction(Instruction instruction, MethodInfo method,
@@ -238,6 +245,24 @@ public class AssemblyWriter {
                 writer.append("mov %rbp, %rsp\n");
                 writer.append("pop %rbp\n");
                 writer.append("retq\n");
+                break;
+            }
+            default:
+                throw new IllegalArgumentException("Unknown opcode " + instruction.opcode());
+        }
+    }
+
+    private void writeVariableInstruction(VariableInstruction instruction, MethodInfo method,
+            RegisterAllocator registers, Writer writer) throws Exception {
+        switch (instruction.opcode()) {
+            case Opcodes.ALOAD: {
+                Register register = registers.allocate();
+                writer.append(String.format("mov -%d(%%rbp), %%%s\n",
+                        instruction.variable() * 8 + 8, register.displayName64()));
+                writer.append(String.format("mov %%%s, -%d(%%rbp)\n", register.displayName64(),
+                        (operandStackOffset + method.locals() + 1) * 8));
+                operandStackOffset++;
+                registers.free(register);
                 break;
             }
             default:
