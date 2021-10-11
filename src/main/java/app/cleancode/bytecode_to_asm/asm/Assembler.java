@@ -1,15 +1,16 @@
 package app.cleancode.bytecode_to_asm.asm;
 
 import java.io.OutputStream;
-import java.lang.ProcessBuilder.Redirect;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.Optional;
 
 public class Assembler {
-    public void assemble(byte[] assembly, String outputFile) throws Exception {
-        ProcessBuilder processBuilder = new ProcessBuilder("as", "-o", outputFile);
-        processBuilder.redirectError(Redirect.INHERIT);
-        Process assemblerProcess = processBuilder.start();
+    public void assemble(byte[] assembly, String outputFile, Optional<String> assemblerProgram)
+            throws Exception {
+        String assemblerCommand = assemblerProgram.orElse("as") + " -o " + outputFile + " -";
+        System.out.println("Assembling with " + assemblerCommand);
+        Process assemblerProcess = Runtime.getRuntime().exec(assemblerCommand);
         OutputStream assemblerStdin = assemblerProcess.getOutputStream();
         assemblerStdin.write(assembly);
         assemblerStdin.flush();
