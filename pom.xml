@@ -52,6 +52,22 @@
                 <artifactId>maven-failsafe-plugin</artifactId>
                 <version>2.22.2</version>
             </plugin>
+                      <plugin>
+    <groupId>com.oracle.substratevm</groupId>
+    <artifactId>native-image-maven-plugin</artifactId>
+    <version>1.0.0-rc14</version>
+    <executions>
+        <execution>
+            <goals>
+                <goal>native-image</goal>
+            </goals>
+            <phase>package</phase>
+        </execution>
+    </executions>
+    <configuration>
+    <mainClass>app.cleancode.bytecode_to_asm.App</mainClass>
+    </configuration>
+</plugin>
   </plugins>
   </build>
 </project>
