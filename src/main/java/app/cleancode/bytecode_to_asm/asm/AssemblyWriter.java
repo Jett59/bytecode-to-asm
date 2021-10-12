@@ -25,7 +25,11 @@ public class AssemblyWriter {
             writer.append(String.format(".file \"%s\"\n\n", fileName));
             writer.append(".code64\n\n");
             writer.append(".text\n\n");
+            boolean hasClinit = false;
             for (MethodInfo method : classInfo.methods()) {
+                if (method.name().equals("<clinit>")) {
+                    hasClinit = true;
+                }
                 String methodName =
                         NameUtils.buildName(classInfo.name(), method.name(), method.signature());
                 if (method.isPublic() && classInfo.isPublic()) {
@@ -74,10 +78,16 @@ public class AssemblyWriter {
                 }
                 writer.append('\n');
             }
+            if (hasClinit) {
+                writer.append(".section .text.clinit, \"ax\"\n");
+                writer.append(".quad " + NameUtils.buildName(classInfo.name(), "<clinit>", "()V"));
+                writer.append("\n\n");
+            }
             writer.append(".data\n\n");
             for (FieldInfo field : classInfo.fields()) {
                 writeFieldInfo(classInfo, field, writer);
             }
+            writer.append("\n");
             writer.append(".section .rodata\n\n");
             writer.append(rodata.toString());
         } catch (Exception e) {
