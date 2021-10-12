@@ -48,7 +48,8 @@ public class ClassInspector extends ClassVisitor {
         System.out.printf("\nField\nAccess %d\nName %s\nDescriptor %s\nSignature %s\nValue %s\n",
                 access, name, descriptor, signature, value);
         fields.add(new FieldInfo(name, (access & Opcodes.ACC_PUBLIC) != 0,
-                (access & Opcodes.ACC_STATIC) != 0, descriptor, value));
+                (access & Opcodes.ACC_STATIC) != 0, (access & Opcodes.ACC_FINAL) != 0, descriptor,
+                value));
         return super.visitField(access, name, descriptor, signature, value);
     }
 

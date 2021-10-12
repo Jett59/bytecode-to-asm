@@ -6,6 +6,7 @@ import java.io.OutputStreamWriter;
 import java.io.Writer;
 import org.objectweb.asm.Opcodes;
 import app.cleancode.bytecode_to_asm.ClassInfo;
+import app.cleancode.bytecode_to_asm.FieldInfo;
 import app.cleancode.bytecode_to_asm.MethodInfo;
 import app.cleancode.bytecode_to_asm.instructions.FieldInstruction;
 import app.cleancode.bytecode_to_asm.instructions.Instruction;
@@ -73,6 +74,10 @@ public class AssemblyWriter {
                 }
                 writer.append('\n');
             }
+            writer.append(".data\n\n");
+            for (FieldInfo field : classInfo.fields()) {
+                writeFieldInfo(classInfo, field, writer);
+            }
             writer.append(".section .rodata\n\n");
             writer.append(rodata.toString());
         } catch (Exception e) {
@@ -96,6 +101,9 @@ public class AssemblyWriter {
         }
         for (int i = 0; i < args.length; i++) {
             String arg = args[i].trim();
+            if (arg.isBlank()) {
+                continue;
+            }
             int argSize = getSize(arg);
             switch (argSize) {
                 case 64: {
@@ -150,6 +158,39 @@ public class AssemblyWriter {
         rodata.append(String.format("%s:\n", id));
         rodata.append(String.format(".asciz \"%s\"\n", value));
         return id;
+    }
+
+    private void writeFieldInfo(ClassInfo classInfo, FieldInfo field, Writer writer)
+            throws Exception {
+        String fieldName = NameUtils.buildName(classInfo.name(), field.name(), field.type());
+        StringBuilder fieldData = new StringBuilder();
+        if (field.isPublic() && classInfo.isPublic()) {
+            fieldData.append(String.format(".global %s\n", fieldName));
+        }
+        fieldData.append(String.format("%s:\n", fieldName));
+        if (field.value() == null) {
+            if (field.isFinal()) {
+                throw new IllegalArgumentException("Uninitialised final field " + field.name());
+            }
+            int fieldSize = getSize(field.type());
+            int fieldBytes = fieldSize / 8;
+            fieldData.append(String.format(".fill %d\n", fieldBytes));
+        } else {
+            if (field.value() instanceof String) {
+                String stringName = createConstString(false, null, (String) field.value());
+                fieldData.append(String.format(".quad %s\n", stringName));
+            } else if (field.value() instanceof Number) {
+                fieldData.append(String.format(".quad %d\n", ((Number) field.value()).longValue()));
+            } else {
+                throw new IllegalArgumentException(
+                        "Unknown field type " + field.value().getClass().getSimpleName());
+            }
+        }
+        if (!field.isFinal()) {
+            writer.append(fieldData);
+        } else {
+            rodata.append(fieldData);
+        }
     }
 
     private int getSize(String type) {
