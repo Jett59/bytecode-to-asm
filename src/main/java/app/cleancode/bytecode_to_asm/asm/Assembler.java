@@ -9,7 +9,7 @@ import java.util.Optional;
 public class Assembler {
     public void assemble(byte[] assembly, String outputFile, Optional<String> assemblerProgram)
             throws Exception {
-        String assemblerCommand = assemblerProgram.orElse("as") + " -o " + outputFile + " -";
+        String assemblerCommand = assemblerProgram.orElse("as") + " -o " + outputFile + " -c -";
         System.out.println("Assembling with " + assemblerCommand);
         Process assemblerProcess = Runtime.getRuntime().exec(assemblerCommand);
         OutputStream assemblerStdin = assemblerProcess.getOutputStream();
