@@ -14,8 +14,6 @@
 		<maven.compiler.source>16</maven.compiler.source>
 		<maven.compiler.target>16</maven.compiler.target>
 
-		<native.maven.plugin.version>0.9.7</native.maven.plugin.version>
-
 		<junit-platform.version>5.8.1</junit-platform.version>
 	</properties>
 	<dependencies>
