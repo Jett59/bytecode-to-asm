@@ -27,19 +27,21 @@ public class AssemblyWriter {
             writer.append(".text\n\n");
             boolean hasClinit = false;
             for (MethodInfo method : classInfo.methods()) {
+                boolean isClinit = false;
                 if (method.name().equals("<clinit>")) {
                     hasClinit = true;
+                    isClinit = true;
                 }
                 String methodName =
                         NameUtils.buildName(classInfo.name(), method.name(), method.signature());
-                if (method.isPublic() && classInfo.isPublic()) {
+                if (method.isPublic() && classInfo.isPublic() || isClinit) {
                     writer.append(String.format(".global %s\n", methodName));
                 }
                 writer.append(String.format("%s:\n", methodName));
-                writer.append("pushq %rbp\n");
-                writer.append("movq %rsp, %rbp\n");
+                writer.append("push %rbp\n");
+                writer.append("mov %rsp, %rbp\n");
                 writer.append(
-                        String.format("subq $%d, %%rsp\n", method.maxStackElements() * Long.BYTES));
+                        String.format("sub $%d, %%rsp\n", method.maxStackElements() * Long.BYTES));
                 storeArgs(method, registers, writer);
                 for (Instruction instruction : method.instructions()) {
                     switch (instruction.getType()) {
@@ -85,7 +87,9 @@ public class AssemblyWriter {
             }
             writer.append(".data\n\n");
             for (FieldInfo field : classInfo.fields()) {
-                writeFieldInfo(classInfo, field, writer);
+                if (field.isStatic()) {
+                    writeFieldInfo(classInfo, field, writer);
+                }
             }
             writer.append("\n");
             writer.append(".section .rodata\n\n");
@@ -233,40 +237,13 @@ public class AssemblyWriter {
             case Opcodes.GETSTATIC: {
                 String fieldName = NameUtils.buildName(instruction.owner(), instruction.field(),
                         instruction.type());
-                int stackElement = operandStackOffset + method.locals();
-                int stackOffset = (stackElement + 1) * 8;
+                int fieldSize = getSize(instruction.type());
+                int stackOffset = (operandStackOffset + method.locals() + 1) * 8;
                 Register register = registers.allocate();
-                int size = getSize(instruction.type());
-                switch (size) {
-                    case 64: {
-                        writer.append(String.format("mov %s(%%rip), %%%s\n", fieldName,
-                                register.displayName64()));
-                        writer.append(String.format("mov %%%s, -%d(%%rbp)\n",
-                                register.displayName64(), stackOffset));
-                        break;
-                    }
-                    case 32: {
-                        writer.append(String.format("mov %s, %%%s\n", fieldName,
-                                register.displayName32()));
-                        writer.append(String.format("mov %%%s, -%d(%%rbp)\n",
-                                register.displayName32(), stackOffset));
-                        break;
-                    }
-                    case 16: {
-                        writer.append(String.format("mov %s, %%%s\n", fieldName,
-                                register.displayName16()));
-                        writer.append(String.format("mov %%%s, -%d(%%rbp)\n",
-                                register.displayName16(), stackOffset));
-                        break;
-                    }
-                    case 8: {
-                        writer.append(String.format("mov %s, %%%s\n", fieldName,
-                                register.displayName8()));
-                        writer.append(String.format("mov %%%s, -%d(%%rbp)\n",
-                                register.displayName8(), stackOffset));
-                        break;
-                    }
-                }
+                writer.append(String.format("mov %s(%%rip), %%%s\n", fieldName,
+                        getRegisterName(register, fieldSize)));
+                writer.append(String.format("mov %%%s, -%d(%%rbp)\n",
+                        getRegisterName(register, fieldSize), stackOffset));
                 registers.free(register);
                 operandStackOffset++;
                 break;
@@ -306,7 +283,7 @@ public class AssemblyWriter {
             Register register = registers.allocate();
             writer.append(
                     String.format("lea %s(%%rip), %%%s\n", valueString, register.displayName64()));
-            writer.append(String.format("movq %%%s, -%d(%%rbp)\n", register.displayName64(),
+            writer.append(String.format("mov %%%s, -%d(%%rbp)\n", register.displayName64(),
                     (operandStackOffset + method.locals() + 1) * 8));
             registers.free(register);
         } else {
