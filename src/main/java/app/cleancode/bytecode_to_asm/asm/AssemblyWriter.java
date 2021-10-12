@@ -136,6 +136,16 @@ public class AssemblyWriter {
         }
     }
 
+    private String getRegisterName(Register register, int size) {
+        return switch (size) {
+            case 64 -> register.displayName64();
+            case 32 -> register.displayName32();
+            case 16 -> register.displayName16();
+            case 8 -> register.displayName8();
+            default -> throw new IllegalArgumentException("Unknown operand size " + size);
+        };
+    }
+
     private void spillOperandStack(Writer writer, MethodInfo method, Register... registers)
             throws Exception {
         if (operandStackOffset <= registers.length) {
@@ -249,6 +259,23 @@ public class AssemblyWriter {
                 }
                 registers.free(register);
                 operandStackOffset++;
+                break;
+            }
+            case Opcodes.PUTSTATIC: {
+                if (operandStackOffset < 1) {
+                    throw new IllegalArgumentException("Operand stack empty");
+                }
+                operandStackOffset--;
+                String fieldName = NameUtils.buildName(instruction.owner(), instruction.field(),
+                        instruction.type());
+                int fieldSize = getSize(instruction.type());
+                int stackOffset = (operandStackOffset + method.locals() + 1) * 8;
+                Register register = registers.allocate();
+                writer.append(String.format("mov -%d(%%rbp), %%%s\n", stackOffset,
+                        getRegisterName(register, fieldSize)));
+                writer.append(String.format("mov %%%s, %s(%%rip)\n",
+                        getRegisterName(register, fieldSize), fieldName));
+                registers.free(register);
                 break;
             }
             default:
