@@ -25,8 +25,6 @@ public class ClassInspector extends ClassVisitor {
     @Override
     public void visit(int version, int access, String name, String signature, String superName,
             String[] interfaces) {
-        System.out.printf("Version %d\nAccess %d\nName %s\nSignature %s\nSuper %s\nInterfaces %s\n",
-                version, access, name, signature, superName, String.join(", ", interfaces));
         super.visit(version, access, name, signature, superName, interfaces);
         this.access = access;
         this.name = name;
@@ -35,18 +33,12 @@ public class ClassInspector extends ClassVisitor {
     @Override
     public MethodVisitor visitMethod(int access, String name, String descriptor, String signature,
             String[] exceptions) {
-        System.out.printf(
-                "\nMethod\nAccess %d\nName %s\nDescriptor %s\nSignature %s\nExceptions %s\n",
-                access, name, descriptor, signature,
-                exceptions == null ? "<None>" : String.join(", ", exceptions));
         return new MethodInspector(access, name, descriptor, this);
     }
 
     @Override
     public FieldVisitor visitField(int access, String name, String descriptor, String signature,
             Object value) {
-        System.out.printf("\nField\nAccess %d\nName %s\nDescriptor %s\nSignature %s\nValue %s\n",
-                access, name, descriptor, signature, value);
         fields.add(new FieldInfo(name, (access & Opcodes.ACC_PUBLIC) != 0,
                 (access & Opcodes.ACC_STATIC) != 0, (access & Opcodes.ACC_FINAL) != 0, descriptor,
                 value));
@@ -55,9 +47,7 @@ public class ClassInspector extends ClassVisitor {
 
     @Override
     public void visitEnd() {
-        System.out.println("\nEnd");
         super.visitEnd();
-        System.out.println();
         info = new ClassInfo(name, (access & Opcodes.ACC_PUBLIC) != 0, methods, fields);
         System.out.println(info);
     }
