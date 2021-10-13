@@ -1,7 +1,7 @@
 package app.cleancode.bytecode_to_asm;
 
 public class Test {
-    public static String stringField = "Hello, World!";
+    public static long stringField = 1024;
 
     public static void main(String[] args) {
         System.out.println(stringField);

@@ -6,6 +6,9 @@ typedef FILE java_io_PrintStream;
 void java_io_PrintStream_println__Ljava_lang_String_V(java_io_PrintStream* this, const char* str) {
   fprintf(this, "%s\n", str);
 }
+void java_io_PrintStream_println__J_V(java_io_PrintStream* this, int64_t val) {
+  fprintf(this, "%ld\n", val);
+}
 void java_lang_Object__init____V(void* this) {}
 
 java_io_PrintStream* java_lang_System_out_Ljava_io_PrintStream;
