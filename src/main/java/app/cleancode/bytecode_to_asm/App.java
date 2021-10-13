@@ -43,7 +43,7 @@ public class App {
                     assembler.assemble(assemblyOutputStream.toByteArray(),
                             classFileName.replace(".class", ".o"), assemblerProgram);
                 } else {
-                    Files.write(Paths.get(classFileName.replace(".class", ".S")),
+                    Files.write(Paths.get(classFileName.replace(".class", ".s")),
                             assemblyOutputStream.toByteArray());
                 }
             }

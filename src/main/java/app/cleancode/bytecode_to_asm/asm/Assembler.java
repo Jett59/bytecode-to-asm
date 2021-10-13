@@ -20,9 +20,9 @@ public class Assembler {
         if (result != 0) {
             System.err.println(new String(assemblerProcess.getErrorStream().readAllBytes(),
                     StandardCharsets.UTF_8));
-            Files.write(Paths.get(outputFile + ".S"), assembly);
+            Files.write(Paths.get(outputFile + ".s"), assembly);
             throw new RuntimeException(
-                    "Assembling failed! written assembly code to " + outputFile + ".S");
+                    "Assembling failed! written assembly code to " + outputFile + ".s");
         }
     }
 }

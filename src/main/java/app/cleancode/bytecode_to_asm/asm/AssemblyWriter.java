@@ -4,6 +4,8 @@ import java.io.BufferedWriter;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
+import java.util.ArrayList;
+import java.util.List;
 import org.objectweb.asm.Opcodes;
 import app.cleancode.bytecode_to_asm.ClassInfo;
 import app.cleancode.bytecode_to_asm.FieldInfo;
@@ -99,10 +101,26 @@ public class AssemblyWriter {
         }
     }
 
+    private String[] getMethodArgTypes(String descriptor) {
+        String arglist = descriptor.substring(1, descriptor.lastIndexOf(')'));
+        List<String> args = new ArrayList<>();
+        for (int i = 0; i < arglist.length(); i++) {
+            char c = arglist.charAt(i);
+            if (c == 'L' || c == '[') {
+                String arg = arglist.substring(i);
+                arg = arg.substring(0, arg.indexOf(';'));
+                args.add(arg);
+                i += arg.length();
+            } else {
+                args.add(Character.toString(c));
+            }
+        }
+        return args.toArray(new String[0]);
+    }
+
     private void storeArgs(MethodInfo method, RegisterAllocator registers, Writer writer)
             throws Exception {
-        String arglist = method.signature().substring(1, method.signature().length() - 2);
-        String[] args = arglist.split(",");
+        String[] args = getMethodArgTypes(method.signature());
         int firstArgRegister = 0;
         writer.append(String.format("// Takes %d arguments\n", args.length));
         Register[] argRegisters = new Register[] {Register.RDI, Register.RSI, Register.RDX,
@@ -119,35 +137,28 @@ public class AssemblyWriter {
                 continue;
             }
             int argSize = getSize(arg);
-            switch (argSize) {
-                case 64: {
-                    writer.append(String.format("mov %%%s, -%d(%%rbp)\n",
-                            argRegisters[i + firstArgRegister].displayName64(),
-                            i * 8 + 8 + firstArgRegister * 8));
-                    break;
-                }
-                case 32: {
-                    writer.append(String.format("mov %%%s, -%d(%%rbp)\n",
-                            argRegisters[i + firstArgRegister].displayName32(),
-                            i * 8 + 8 + 8 * firstArgRegister));
-                    break;
-                }
-                case 16: {
-                    writer.append(String.format("mov %%%s, -%d(%%rbp)\n",
-                            argRegisters[i + firstArgRegister].displayName16(),
-                            i * 8 + 8 + 8 * firstArgRegister));
-                    break;
-                }
-                case 8: {
-                    writer.append(String.format("mov %%%s, -%d(%%rbp)\n",
-                            argRegisters[i + firstArgRegister].displayName8(),
-                            i * 8 + 8 + 8 * firstArgRegister));
-                    break;
-                }
-                default:
-                    throw new IllegalArgumentException("Unknown operand size " + argSize);
+            Register register = argRegisters[i + firstArgRegister];
+            int stackOffset = (i + 1 + firstArgRegister) * 8;
+            if (argSize != 64) {
+                String argRegister = getRegisterName(register, argSize);
+                char argSizeSuffix = getSizeSuffix(argSize);
+                String movMnemonic = String.format("movs%cq", argSizeSuffix);
+                writer.append(String.format("%s %%%s, %%%s\n", movMnemonic, argRegister,
+                        register.displayName64()));
             }
+            writer.append(
+                    String.format("mov %%%s, -%d(%%rbp)\n", register.displayName64(), stackOffset));
         }
+    }
+
+    private char getSizeSuffix(int size) {
+        return switch (size) {
+            case 64 -> 'q';
+            case 32 -> 'l';
+            case 16 -> 'w';
+            case 8 -> 'b';
+            default -> throw new IllegalArgumentException("Unknown size " + size);
+        };
     }
 
     private String getRegisterName(Register register, int size) {
