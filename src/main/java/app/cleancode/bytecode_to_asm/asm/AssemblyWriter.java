@@ -251,10 +251,14 @@ public class AssemblyWriter {
                 int fieldSize = getSize(instruction.type());
                 int stackOffset = (operandStackOffset + method.locals() + 1) * 8;
                 Register register = registers.allocate();
-                writer.append(String.format("mov %s(%%rip), %%%s\n", fieldName,
-                        getRegisterName(register, fieldSize)));
-                writer.append(String.format("mov %%%s, -%d(%%rbp)\n",
-                        getRegisterName(register, fieldSize), stackOffset));
+                String registerName = getRegisterName(register, fieldSize);
+                writer.append(String.format("mov %s(%%rip), %%%s\n", fieldName, registerName));
+                if (fieldSize != 64) {
+                    writer.append(String.format("movs%cq %%%s, %%%s\n", getSizeSuffix(fieldSize),
+                            registerName, register.displayName64()));
+                }
+                writer.append(String.format("mov %%%s, -%d(%%rbp)\n", register.displayName64(),
+                        stackOffset));
                 registers.free(register);
                 operandStackOffset++;
                 break;
